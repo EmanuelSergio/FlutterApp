@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Run Flutter app (debug)",
+      "command": "flutter run -d windows --verbose --no-pub --dart-define=FLUTTER_WEB_USE_SKIA=true",
+      "args": [],
+      "group": "build",
+      "isBackground": false,
+      "problemMatcher": ["$dart"]
+    }
+  ]
+}
