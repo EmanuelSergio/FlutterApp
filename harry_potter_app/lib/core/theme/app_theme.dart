@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData light() {
-    const seed = Color(0xFF3D2B1F); // warm brown
+    const seed = Color(0xFF3D2B1F);
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: seed),
       useMaterial3: true,
