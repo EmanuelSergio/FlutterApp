@@ -16,7 +16,10 @@ GoRouter createRouter() {
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
+          // Depend on locale so this subtree rebuilds immediately on language change
+          final locale = context.locale; // ignore: unused_local_variable
           return Scaffold(
+            key: ValueKey('shell_${locale.languageCode}'),
             body: navigationShell,
             bottomNavigationBar: NavigationBar(
               selectedIndex: navigationShell.currentIndex,

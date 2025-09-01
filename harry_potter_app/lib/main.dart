@@ -31,7 +31,9 @@ class MyApp extends StatelessWidget {
 
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, themeMode) {
+        final locale = context.locale; // trigger rebuild on locale change
         return MaterialApp.router(
+          key: ValueKey('app_${locale.languageCode}'),
           debugShowCheckedModeBanner: false,
           title: 'app_title'.tr(),
           routerConfig: router,

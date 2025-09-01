@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design/molecules/character_tile.dart';
+import 'package:harry_potter_app/design/molecules/error_view.dart';
 
-import '../bloc/characters_bloc.dart';
+import '../cubit/characters_cubit.dart';
+import '../cubit/characters_state.dart';
 
 class CharactersPage extends StatelessWidget {
   const CharactersPage({super.key});
@@ -21,7 +23,7 @@ class CharactersPage extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  BlocBuilder<CharactersBloc, CharactersState>(
+                  BlocBuilder<CharactersCubit, CharactersState>(
                     buildWhen: (p, n) => p.selectedHouse != n.selectedHouse,
                     builder: (context, state) {
                       final selected = <String>{
@@ -50,12 +52,10 @@ class CharactersPage extends StatelessWidget {
                         emptySelectionAllowed: true,
                         onSelectionChanged: (s) {
                           if (s.isEmpty) {
-                            context.read<CharactersBloc>().add(
-                              const LoadAllCharacters(),
-                            );
+                            context.read<CharactersCubit>().loadAll();
                           } else {
-                            context.read<CharactersBloc>().add(
-                              LoadCharactersByHouse(s.first),
+                            context.read<CharactersCubit>().loadByHouse(
+                              s.first,
                             );
                           }
                         },
@@ -64,9 +64,7 @@ class CharactersPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
-                    onPressed: () => context.read<CharactersBloc>().add(
-                      const LoadAllCharacters(),
-                    ),
+                    onPressed: () => context.read<CharactersCubit>().loadAll(),
                     icon: const Icon(Icons.filter_alt_off),
                     label: Text('all'.tr()),
                   ),
@@ -81,13 +79,12 @@ class CharactersPage extends StatelessWidget {
                 prefixIcon: const Icon(Icons.search),
                 hintText: 'search'.tr(),
               ),
-              onChanged: (v) =>
-                  context.read<CharactersBloc>().add(SearchCharacters(v)),
+              onChanged: (v) => context.read<CharactersCubit>().search(v),
             ),
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: BlocBuilder<CharactersBloc, CharactersState>(
+            child: BlocBuilder<CharactersCubit, CharactersState>(
               builder: (context, state) {
                 final query = state.searchQuery.toLowerCase();
                 final list = query.isEmpty
@@ -99,52 +96,41 @@ class CharactersPage extends StatelessWidget {
                   case CharactersStatus.loading:
                     return const Center(child: CircularProgressIndicator());
                   case CharactersStatus.failure:
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                            ),
-                            child: Text(
-                              state.error ?? 'error_generic'.tr(),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.refresh),
-                            label: Text('retry'.tr()),
-                            onPressed: () {
-                              final h = state.selectedHouse;
-                              if (h == null) {
-                                context.read<CharactersBloc>().add(
-                                  const LoadAllCharacters(),
-                                );
-                              } else {
-                                context.read<CharactersBloc>().add(
-                                  LoadCharactersByHouse(h),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
+                    return ErrorView(
+                      messageKey: (state.error ?? 'error_generic'),
+                      onRetry: () {
+                        final h = state.selectedHouse;
+                        if (h == null) {
+                          context.read<CharactersCubit>().loadAll();
+                        } else {
+                          context.read<CharactersCubit>().loadByHouse(h);
+                        }
+                      },
                     );
                   case CharactersStatus.success:
-                    if (list.isEmpty)
+                    if (list.isEmpty) {
                       return Center(child: Text('empty_list'.tr()));
-                    return ListView.separated(
-                      itemCount: list.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final c = list[index];
-                        return CharacterTile(
-                          character: c,
-                          onTap: () => context.go('/character/${c.id}'),
-                        );
+                    }
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        final h = state.selectedHouse;
+                        if (h == null) {
+                          await context.read<CharactersCubit>().loadAll();
+                        } else {
+                          await context.read<CharactersCubit>().loadByHouse(h);
+                        }
                       },
+                      child: ListView.separated(
+                        itemCount: list.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final c = list[index];
+                          return CharacterTile(
+                            character: c,
+                            onTap: () => context.go('/character/${c.id}'),
+                          );
+                        },
+                      ),
                     );
                   case CharactersStatus.initial:
                     return const SizedBox.shrink();

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import '../../../characters/presentation/bloc/characters_bloc.dart';
+import '../../../characters/presentation/cubit/characters_cubit.dart';
 
 class HousesPage extends StatelessWidget {
   const HousesPage({super.key});
@@ -23,9 +23,7 @@ class HousesPage extends StatelessWidget {
               title: Text('house_${house}'.tr()),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                context.read<CharactersBloc>().add(
-                  LoadCharactersByHouse(house),
-                );
+                context.read<CharactersCubit>().loadByHouse(house);
                 context.go('/');
               },
             ),

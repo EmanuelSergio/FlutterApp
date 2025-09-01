@@ -6,6 +6,8 @@ import '../../domain/usecases/get_character_by_id.dart';
 import '../../domain/entities/character.dart';
 import '../../../../core/di/locator.dart';
 import '../../../../design/atoms/hp_avatar.dart';
+import '../../../../core/error/error_mapper.dart';
+import '../../../../design/molecules/error_view.dart';
 
 class CharacterDetailsPage extends StatefulWidget {
   final String id;
@@ -33,10 +35,11 @@ class _CharacterDetailsPageState extends State<CharacterDetailsPage> {
       setState(() {
         character = result;
         loading = false;
+        error = null;
       });
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = mapErrorToKey(e);
         loading = false;
       });
     }
@@ -49,7 +52,7 @@ class _CharacterDetailsPageState extends State<CharacterDetailsPage> {
     if (error != null)
       return Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text(error!)),
+        body: ErrorView(messageKey: (error ?? 'error_generic'), onRetry: _load),
       );
 
     final c = character!;

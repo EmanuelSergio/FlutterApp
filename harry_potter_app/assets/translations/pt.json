@@ -27,5 +27,9 @@
   "theme_system": "Sistema",
   "theme_light": "Claro",
   "theme_dark": "Escuro",
-  "language": "Idioma"
+  "language": "Idioma",
+  "error_timeout": "Tempo esgotado",
+  "error_offline": "Você está offline",
+  "error_not_found": "Não encontrado",
+  "error_server": "Erro no servidor"
 }

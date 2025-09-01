@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart';
-
 import '../../domain/entities/character.dart';
 import '../../domain/repositories/characters_repository.dart';
 import '../datasources/characters_remote_datasource.dart';
@@ -9,21 +7,35 @@ class CharactersRepositoryImpl implements CharactersRepository {
   final CharactersRemoteDataSource remote;
   CharactersRepositoryImpl(this.remote);
 
+  // Simple in-memory caches
+  List<Character>? _allCache;
+  final Map<String, List<Character>> _houseCache = {};
+  final Map<String, Character> _byIdCache = {};
+
   @override
   Future<List<Character>> getAllCharacters() async {
+    if (_allCache != null) return _allCache!;
     final result = await remote.getAllCharacters();
-    return result.map((m) => m.toEntity()).toList();
+    _allCache = result.map((m) => m.toEntity()).toList();
+    return _allCache!;
   }
 
   @override
   Future<Character> getCharacterById(String id) async {
+    if (_byIdCache.containsKey(id)) return _byIdCache[id]!;
     final result = await remote.getCharacterById(id);
-    return result.toEntity();
+    final entity = result.toEntity();
+    _byIdCache[id] = entity;
+    return entity;
   }
 
   @override
   Future<List<Character>> getCharactersByHouse(String house) async {
-    final result = await remote.getCharactersByHouse(house);
-    return result.map((m) => m.toEntity()).toList();
+    final key = house.toLowerCase();
+    if (_houseCache.containsKey(key)) return _houseCache[key]!;
+    final result = await remote.getCharactersByHouse(key);
+    final list = result.map((m) => m.toEntity()).toList();
+    _houseCache[key] = list;
+    return list;
   }
 }
